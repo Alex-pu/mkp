@@ -1,0 +1,158 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"   // You can change to "mysql" if preferred
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==================================
+// USER MODEL (Admins Only)
+// ==================================
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(ADMIN)
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  createdPolls   Poll[]
+  assignedPolls  PollAssignment[] @relation("AssignedPolls")
+
+  @@map("users")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+}
+
+// ==================================
+// POLL MODEL
+// ==================================
+model Poll {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  isPublic    Boolean  @default(true)
+
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdBy  User       @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  questions  Question[]
+  responses  Response[]     // All responses linked to this poll
+  votes      Vote[]         // Optional: Group multiple responses into one vote submission
+  assignments PollAssignment[]
+
+  @@map("polls")
+}
+
+model PollAssignment {
+  id        String   @id @default(cuid())
+  pollId    String
+  adminId   String
+  createdAt DateTime @default(now())
+
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  admin     User     @relation("AssignedPolls", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, adminId])
+  @@map("poll_assignments")
+}
+
+// ==================================
+// QUESTION MODEL
+// ==================================
+model Question {
+  id        String        @id @default(cuid())
+  pollId    String
+  text      String
+  type      QuestionType
+  order     Int           // To control display order of questions
+
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relations
+  poll      Poll          @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  options   Option[]
+  responses Response[]
+
+  @@map("questions")
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  OPEN_TEXT
+}
+
+// ==================================
+// OPTION MODEL (For Multiple Choice Questions)
+// ==================================
+model Option {
+  id          String   @id @default(cuid())
+  questionId  String
+  text        String   // e.g., "Borana", "Miller", "Others"
+  order       Int      // Order of options
+
+  createdAt   DateTime @default(now())
+
+  // Relations
+  question    Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responses   Response[]
+
+  @@map("options")
+}
+
+// ==================================
+// RESPONSE MODEL - Core Voting Table
+// ==================================
+model Response {
+  id          String   @id @default(cuid())
+  pollId      String
+  questionId  String
+  optionId    String?     // Null if OPEN_TEXT question
+  optionText  String?     // Snapshot of selected option text for resilient analytics
+  openText    String?     // Filled when user types custom answer (Open Text or "Others")
+
+  voterToken  String?     // Optional: To group votes from same session
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  // Relations
+  poll        Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  question    Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  option      Option?    @relation(fields: [optionId], references: [id])
+
+  @@map("responses")
+}
+
+// ==================================
+// VOTE MODEL (Optional - Groups responses from one submission)
+// ==================================
+model Vote {
+  id          String   @id @default(cuid())
+  pollId      String
+  voterToken  String?   // Unique token per voting session
+
+  createdAt   DateTime @default(now())
+
+  // Relations
+  poll        Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@map("votes")
+}
