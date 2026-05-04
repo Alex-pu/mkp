@@ -35,11 +35,6 @@ const AssignedPollsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Assigned private polls</h1>
-        <p className="mt-1 text-slate-500">These private polls are visible only inside the admin dashboard and can be voted on by assigned admins.</p>
-      </div>
-
       {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
 
       {polls.length === 0 ? (
