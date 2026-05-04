@@ -1,5 +1,10 @@
 import api from './api';
-import { LoginInput, RegisterInput, AuthResponse, AssignableAdmin, ManagedUser, UpdateUserPasswordInput } from '../types';
+import { LoginInput, RegisterInput, AuthResponse, AssignableAdmin, ManagedUser, PaginatedResult, PaginationParams, UpdateUserPasswordInput } from '../types';
+
+const toPaginatedResult = <T>(response: any): PaginatedResult<T> => ({
+  items: response.data.data,
+  meta: response.data.meta,
+});
 
 export const authService = {
   async login(input: LoginInput): Promise<AuthResponse> {
@@ -12,14 +17,14 @@ export const authService = {
     return response.data.data;
   },
 
-  async getAdmins(): Promise<AssignableAdmin[]> {
-    const response = await api.get('/auth/admins');
-    return response.data.data;
+  async getAdmins(params?: PaginationParams): Promise<AssignableAdmin[] | PaginatedResult<AssignableAdmin>> {
+    const response = await api.get('/auth/admins', { params });
+    return params?.page !== undefined || params?.limit !== undefined ? toPaginatedResult<AssignableAdmin>(response) : response.data.data;
   },
 
-  async getUsers(): Promise<ManagedUser[]> {
-    const response = await api.get('/auth/users');
-    return response.data.data;
+  async getUsers(params?: PaginationParams): Promise<ManagedUser[] | PaginatedResult<ManagedUser>> {
+    const response = await api.get('/auth/users', { params });
+    return params?.page !== undefined || params?.limit !== undefined ? toPaginatedResult<ManagedUser>(response) : response.data.data;
   },
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<ManagedUser> {

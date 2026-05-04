@@ -28,6 +28,10 @@ export interface FbReportSummary {
   items: FbReportSummaryItem[];
 }
 
+export interface PaginatedFbReportSummary extends FbReportSummary {
+  meta: import('./pagination').PaginationMeta;
+}
+
 export interface CreateFbInput {
   text: string;
   links: string[];

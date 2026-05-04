@@ -1,5 +1,7 @@
 import prisma from '../config/database';
 import { CreatePollInput, UpdatePollInput, Poll } from '../types';
+import { PaginatedResult } from '../types';
+import { buildPaginationMeta, PaginationOptions, withPaginationSummary } from '../utils/pagination';
 
 type PollRecord = Awaited<ReturnType<typeof prisma.poll.findFirst>> & {
   questions: Array<{
@@ -94,14 +96,43 @@ const getValidatedAssignedAdminIds = async (adminIds: string[]) => {
 };
 
 export class PollService {
-  static async getAllPolls(userId: string, role: 'SUPER_ADMIN' | 'ADMIN'): Promise<Poll[]> {
-    const polls = await prisma.poll.findMany({
-      where: role === 'SUPER_ADMIN' ? {} : { createdById: userId },
-      include: pollInclude,
-      orderBy: { createdAt: 'desc' },
-    });
+  static async getAllPolls(userId: string, role: 'SUPER_ADMIN' | 'ADMIN', pagination?: PaginationOptions): Promise<Poll[] | PaginatedResult<Poll>> {
+    const where = role === 'SUPER_ADMIN' ? {} : { createdById: userId };
 
-    return polls.map(mapPoll);
+    if (!pagination) {
+      const polls = await prisma.poll.findMany({
+        where,
+        include: pollInclude,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return polls.map(mapPoll);
+    }
+
+    const [totalItems, activePolls, totalVotes, polls] = await prisma.$transaction([
+      prisma.poll.count({ where }),
+      prisma.poll.count({ where: { ...where, isActive: true } }),
+      prisma.vote.count({
+        where: {
+          poll: where,
+        },
+      }),
+      prisma.poll.findMany({
+        where,
+        include: pollInclude,
+        orderBy: { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+    ]);
+
+    return {
+      items: polls.map(mapPoll),
+      pagination: withPaginationSummary(buildPaginationMeta(pagination.page, pagination.limit, totalItems), {
+        activePolls,
+        totalVotes,
+      }),
+    };
   }
 
   static async getPollById(id: string, userId?: string, role: 'SUPER_ADMIN' | 'ADMIN' = 'ADMIN'): Promise<Poll | null> {
@@ -247,30 +278,82 @@ export class PollService {
     });
   }
 
-  static async getPublicPolls(): Promise<Poll[]> {
-    const polls = await prisma.poll.findMany({
-      where: { isActive: true, isPublic: true },
-      include: pollInclude,
-      orderBy: { createdAt: 'desc' },
-    });
+  static async getPublicPolls(search?: string, pagination?: PaginationOptions): Promise<Poll[] | PaginatedResult<Poll>> {
+    const normalizedSearch = search?.trim();
+    const where = {
+      isActive: true,
+      isPublic: true,
+      ...(normalizedSearch
+        ? {
+            OR: [
+              { title: { contains: normalizedSearch, mode: 'insensitive' as const } },
+              { description: { contains: normalizedSearch, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
 
-    return polls.map(mapPoll);
+    if (!pagination) {
+      const polls = await prisma.poll.findMany({
+        where,
+        include: pollInclude,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return polls.map(mapPoll);
+    }
+
+    const [totalItems, polls] = await prisma.$transaction([
+      prisma.poll.count({ where }),
+      prisma.poll.findMany({
+        where,
+        include: pollInclude,
+        orderBy: { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+    ]);
+
+    return {
+      items: polls.map(mapPoll),
+      pagination: buildPaginationMeta(pagination.page, pagination.limit, totalItems),
+    };
   }
 
-  static async getAssignedPrivatePolls(userId: string): Promise<Poll[]> {
-    const polls = await prisma.poll.findMany({
-      where: {
-        isActive: true,
-        isPublic: false,
-        assignments: {
-          some: { adminId: userId },
-        },
+  static async getAssignedPrivatePolls(userId: string, pagination?: PaginationOptions): Promise<Poll[] | PaginatedResult<Poll>> {
+    const where = {
+      isActive: true,
+      isPublic: false,
+      assignments: {
+        some: { adminId: userId },
       },
-      include: pollInclude,
-      orderBy: { createdAt: 'desc' },
-    });
+    };
 
-    return polls.map(mapPoll);
+    if (!pagination) {
+      const polls = await prisma.poll.findMany({
+        where,
+        include: pollInclude,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return polls.map(mapPoll);
+    }
+
+    const [totalItems, polls] = await prisma.$transaction([
+      prisma.poll.count({ where }),
+      prisma.poll.findMany({
+        where,
+        include: pollInclude,
+        orderBy: { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+    ]);
+
+    return {
+      items: polls.map(mapPoll),
+      pagination: buildPaginationMeta(pagination.page, pagination.limit, totalItems),
+    };
   }
 
   static async getAssignedPrivatePollById(id: string, userId: string, role: 'SUPER_ADMIN' | 'ADMIN'): Promise<Poll | null> {

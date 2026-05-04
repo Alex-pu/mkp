@@ -10,7 +10,10 @@ const LandingPage: React.FC = () => {
   const [featuredPolls, setFeaturedPolls] = useState<Poll[]>([]);
 
   useEffect(() => {
-    pollService.getPublicPolls().then((polls) => setFeaturedPolls(polls.slice(0, 3))).catch(() => setFeaturedPolls([]));
+    pollService.getPublicPolls({ page: 1, limit: 3 }).then((data) => {
+      const polls = Array.isArray(data) ? data : data.items;
+      setFeaturedPolls(polls);
+    }).catch(() => setFeaturedPolls([]));
   }, []);
 
   return (
@@ -33,11 +36,6 @@ const LandingPage: React.FC = () => {
             <Link to="/polls" className="group/button">
               <Button size="lg" className="rounded-full px-8 shadow-lg shadow-blue-200/60 transition-all duration-300 group-hover/button:-translate-y-1 group-hover/button:shadow-xl">
                 Browse active polls
-              </Button>
-            </Link>
-            <Link to="/login" className="group/button">
-              <Button size="lg" variant="secondary" className="rounded-full border border-slate-300 bg-white px-8 transition-all duration-300 group-hover/button:-translate-y-1 group-hover/button:border-slate-400 group-hover/button:shadow-lg">
-                Admin dashboard
               </Button>
             </Link>
           </div>
@@ -115,7 +113,7 @@ const LandingPage: React.FC = () => {
         <div className="grid gap-6 lg:grid-cols-3">
           {featuredPolls.length > 0 ? featuredPolls.map((poll) => <PollCard key={poll.id} poll={poll} />) : (
             <Card className="rounded-3xl border border-dashed border-slate-300 bg-white text-slate-500 lg:col-span-3">
-              No active polls are live yet. Sign in as admin to publish the first one.
+              No active polls are live yet.
             </Card>
           )}
         </div>

@@ -1,10 +1,15 @@
 import prisma from '../config/database';
-import { AnalyticsData } from '../types';
+import { AnalyticsData, AnalyticsTextResponse, PaginatedResult } from '../types';
+import { buildPaginationMeta, PaginationOptions } from '../utils/pagination';
+
+const getAnalyticsPollWhere = (pollId: string, userId?: string, role: 'SUPER_ADMIN' | 'ADMIN' = 'ADMIN') => (
+  role === 'SUPER_ADMIN' ? { id: pollId } : userId ? { id: pollId, createdById: userId } : { id: pollId }
+);
 
 export class AnalyticsService {
   static async getPollAnalytics(pollId: string, userId?: string, role: 'SUPER_ADMIN' | 'ADMIN' = 'ADMIN'): Promise<AnalyticsData> {
     const poll = await prisma.poll.findFirst({
-      where: role === 'SUPER_ADMIN' ? { id: pollId } : userId ? { id: pollId, createdById: userId } : { id: pollId },
+      where: getAnalyticsPollWhere(pollId, userId, role),
       include: {
         questions: {
           include: { options: true },
@@ -43,7 +48,7 @@ export class AnalyticsService {
               percentage: totalResponses > 0 ? 100 : 0,
             },
           ],
-          openTextResponses,
+          openTextResponseCount: openTextResponses.length,
         };
       }
 
@@ -95,7 +100,7 @@ export class AnalyticsService {
         type: question.type,
         totalResponses,
         responses: responsesData,
-        openTextResponses,
+        openTextResponseCount: openTextResponses.length,
       };
     });
 
@@ -117,6 +122,61 @@ export class AnalyticsService {
           }, null)
         : null,
       questions,
+    };
+  }
+
+  static async getQuestionOpenTextResponses(
+    pollId: string,
+    questionId: string,
+    pagination: PaginationOptions,
+    userId?: string,
+    role: 'SUPER_ADMIN' | 'ADMIN' = 'ADMIN',
+  ): Promise<PaginatedResult<AnalyticsTextResponse>> {
+    const poll = await prisma.poll.findFirst({
+      where: getAnalyticsPollWhere(pollId, userId, role),
+      select: {
+        id: true,
+        questions: {
+          where: { id: questionId },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!poll || poll.questions.length === 0) {
+      throw new Error('Question not found');
+    }
+
+    const where = {
+      pollId,
+      questionId,
+      openText: {
+        not: null,
+      },
+    };
+
+    const [totalItems, responses] = await prisma.$transaction([
+      prisma.response.count({ where }),
+      prisma.response.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit,
+        select: {
+          id: true,
+          openText: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    return {
+      items: responses.map((response) => ({
+        id: response.id,
+        text: response.openText ?? '',
+        createdAt: response.createdAt,
+      })),
+      pagination: buildPaginationMeta(pagination.page, pagination.limit, totalItems),
     };
   }
 }

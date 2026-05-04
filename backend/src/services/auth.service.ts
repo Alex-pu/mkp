@@ -1,7 +1,8 @@
 import prisma from '../config/database';
 import { hashPassword, comparePassword } from '../utils/helpers';
 import { generateToken } from '../utils/generateToken';
-import { LoginInput, RegisterInput, AuthResponse, ManagedUser, UpdateUserPasswordInput, UpdateUserStatusInput } from '../types';
+import { LoginInput, RegisterInput, AuthResponse, ManagedUser, PaginatedResult, UpdateUserPasswordInput, UpdateUserStatusInput } from '../types';
+import { buildPaginationMeta, PaginationOptions, withPaginationSummary } from '../utils/pagination';
 
 export class AuthService {
   static async login(input: LoginInput): Promise<AuthResponse> {
@@ -69,50 +70,59 @@ export class AuthService {
     };
   }
 
-  static async getAssignableAdmins() {
-    return prisma.user.findMany({
-      where: { role: 'ADMIN', isActive: true },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: [{ name: 'asc' }, { email: 'asc' }],
-    });
+  static async getAssignableAdmins(pagination?: PaginationOptions) {
+    const where = { role: 'ADMIN' as const, isActive: true };
+    const select = {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+    const orderBy = [{ name: 'asc' as const }, { email: 'asc' as const }];
+
+    if (!pagination) {
+      return prisma.user.findMany({ where, select, orderBy });
+    }
+
+    const [totalItems, admins] = await prisma.$transaction([
+      prisma.user.count({ where }),
+      prisma.user.findMany({ where, select, orderBy, skip: pagination.skip, take: pagination.limit }),
+    ]);
+
+    return {
+      items: admins,
+      pagination: buildPaginationMeta(pagination.page, pagination.limit, totalItems),
+    };
   }
 
-  static async getManagedUsers(): Promise<ManagedUser[]> {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-        createdPolls: {
-          where: { isActive: true },
-          select: {
-            id: true,
-            title: true,
-          },
-          orderBy: { createdAt: 'desc' },
+  static async getManagedUsers(pagination?: PaginationOptions): Promise<ManagedUser[] | PaginatedResult<ManagedUser>> {
+    const select = {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+      createdPolls: {
+        where: { isActive: true },
+        select: {
+          id: true,
+          title: true,
         },
+        orderBy: { createdAt: 'desc' as const },
       },
-      orderBy: [
-        { role: 'desc' },
-        { isActive: 'desc' },
-        { name: 'asc' },
-        { email: 'asc' },
-      ],
-    });
-
-    return users.map((user) => ({
+    };
+    const orderBy = [
+      { role: 'desc' as const },
+      { isActive: 'desc' as const },
+      { name: 'asc' as const },
+      { email: 'asc' as const },
+    ];
+    const mapManagedUser = (user: any): ManagedUser => ({
       id: user.id,
       email: user.email,
       name: user.name,
@@ -122,7 +132,27 @@ export class AuthService {
       updatedAt: user.updatedAt,
       activePollCount: user.createdPolls.length,
       activePolls: user.createdPolls,
-    }));
+    });
+
+    if (!pagination) {
+      const users = await prisma.user.findMany({ select, orderBy });
+      return users.map(mapManagedUser);
+    }
+
+    const [totalItems, activeUsers, superAdmins, users] = await prisma.$transaction([
+      prisma.user.count(),
+      prisma.user.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { role: 'SUPER_ADMIN' } }),
+      prisma.user.findMany({ select, orderBy, skip: pagination.skip, take: pagination.limit }),
+    ]);
+
+    return {
+      items: users.map(mapManagedUser),
+      pagination: withPaginationSummary(buildPaginationMeta(pagination.page, pagination.limit, totalItems), {
+        activeUsers,
+        superAdmins,
+      }),
+    };
   }
 
   static async updateUserStatus(userId: string, input: UpdateUserStatusInput, actingUserId: string): Promise<ManagedUser> {

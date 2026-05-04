@@ -5,12 +5,14 @@ export const sendSuccess = <T>(
   res: Response,
   data: T,
   message = 'Success',
-  statusCode = 200
+  statusCode = 200,
+  meta?: ApiResponse<T>['meta']
 ): void => {
   const response: ApiResponse<T> = {
     success: true,
     data,
     message,
+    ...(meta ? { meta } : {}),
   };
   res.status(statusCode).json(response);
 };

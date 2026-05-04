@@ -21,7 +21,7 @@ const CreatePollPage: React.FC = () => {
 		}
 
 		authService.getAdmins()
-			.then(setAdmins)
+			.then((data) => setAdmins(Array.isArray(data) ? data : data.items))
 			.catch(() => setAdmins([]))
 			.finally(() => setAdminsLoaded(true));
 	}, [adminsLoaded, user?.role]);

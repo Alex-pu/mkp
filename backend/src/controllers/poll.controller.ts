@@ -3,13 +3,18 @@ import { PollService } from '../services/poll.service';
 import { sendSuccess } from '../utils/apiResponse';
 import { catchAsync } from '../utils/catchAsync';
 import { CreatePollInput, UpdatePollInput } from '../types';
+import { parsePaginationQuery } from '../utils/pagination';
 
 interface AuthRequest extends Request {
   user?: any;
 }
 
 export const getPolls = catchAsync(async (req: AuthRequest, res: Response) => {
-  const polls = await PollService.getAllPolls(req.user.id, req.user.role);
+  const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+  const polls = await PollService.getAllPolls(req.user.id, req.user.role, pagination ?? undefined);
+  if (pagination && !Array.isArray(polls)) {
+    return sendSuccess(res, polls.items, 'Success', 200, polls.pagination);
+  }
   sendSuccess(res, polls);
 });
 
@@ -42,7 +47,12 @@ export const updatePoll = catchAsync(async (req: AuthRequest, res: Response) => 
 });
 
 export const getPublicPolls = catchAsync(async (req: Request, res: Response) => {
-  const polls = await PollService.getPublicPolls();
+  const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+  const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+  const polls = await PollService.getPublicPolls(search, pagination ?? undefined);
+  if (pagination && !Array.isArray(polls)) {
+    return sendSuccess(res, polls.items, 'Success', 200, polls.pagination);
+  }
   sendSuccess(res, polls);
 });
 
@@ -52,7 +62,11 @@ export const deletePoll = catchAsync(async (req: AuthRequest, res: Response) => 
 });
 
 export const getAssignedPrivatePolls = catchAsync(async (req: AuthRequest, res: Response) => {
-  const polls = await PollService.getAssignedPrivatePolls(req.user.id);
+  const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+  const polls = await PollService.getAssignedPrivatePolls(req.user.id, pagination ?? undefined);
+  if (pagination && !Array.isArray(polls)) {
+    return sendSuccess(res, polls.items, 'Success', 200, polls.pagination);
+  }
   sendSuccess(res, polls);
 });
 

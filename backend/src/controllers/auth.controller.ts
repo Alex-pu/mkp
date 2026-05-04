@@ -3,6 +3,7 @@ import { AuthService } from '../services/auth.service';
 import { sendSuccess, sendError } from '../utils/apiResponse';
 import { catchAsync } from '../utils/catchAsync';
 import { LoginInput, RegisterInput, UpdateUserPasswordInput, UpdateUserStatusInput } from '../types';
+import { parsePaginationQuery } from '../utils/pagination';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -22,12 +23,20 @@ export const register = catchAsync(async (req: AuthRequest, res: Response) => {
 });
 
 export const getAssignableAdmins = catchAsync(async (_req: AuthRequest, res: Response) => {
-  const admins = await AuthService.getAssignableAdmins();
+  const pagination = parsePaginationQuery(_req.query as Record<string, unknown>);
+  const admins = await AuthService.getAssignableAdmins(pagination ?? undefined);
+  if (pagination && !Array.isArray(admins)) {
+    return sendSuccess(res, admins.items, 'Success', 200, admins.pagination);
+  }
   sendSuccess(res, admins);
 });
 
 export const getManagedUsers = catchAsync(async (_req: AuthRequest, res: Response) => {
-  const users = await AuthService.getManagedUsers();
+  const pagination = parsePaginationQuery(_req.query as Record<string, unknown>);
+  const users = await AuthService.getManagedUsers(pagination ?? undefined);
+  if (pagination && !Array.isArray(users)) {
+    return sendSuccess(res, users.items, 'Success', 200, users.pagination);
+  }
   sendSuccess(res, users);
 });
 

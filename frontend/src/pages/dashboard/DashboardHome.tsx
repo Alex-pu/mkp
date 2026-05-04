@@ -4,15 +4,21 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { pollService } from '../../services/pollService';
 import { authService } from '../../services/authService';
-import { Poll } from '../../types';
+import { Poll, PaginationMeta } from '../../types';
 import Input from '../../components/common/Input';
 import PollListTable from '../../components/dashboard/PollListTable';
 import { useAuth } from '../../hooks/useAuth';
+import PaginationControls from '../../components/common/PaginationControls';
+
+const RECENT_POLLS_PAGE_SIZE = 5;
 
 const DashboardHome: React.FC = () => {
 	const { user } = useAuth();
 	const [polls, setPolls] = useState<Poll[]>([]);
+	const [pollsPagination, setPollsPagination] = useState<PaginationMeta | null>(null);
 	const [assignedPolls, setAssignedPolls] = useState<Poll[]>([]);
+	const [assignedPollsPagination, setAssignedPollsPagination] = useState<PaginationMeta | null>(null);
+	const [recentPollsPage, setRecentPollsPage] = useState(1);
 	const [inviteData, setInviteData] = useState<{ name: string; email: string; password: string; role: 'SUPER_ADMIN' | 'ADMIN' }>({
 		name: '',
 		email: '',
@@ -24,14 +30,36 @@ const DashboardHome: React.FC = () => {
 	const [inviteError, setInviteError] = useState('');
 
 	useEffect(() => {
-		pollService.getPolls().then(setPolls).catch(() => setPolls([]));
-		if (user?.role === 'ADMIN') {
-			pollService.getAssignedPrivatePolls().then(setAssignedPolls).catch(() => setAssignedPolls([]));
-		}
-	}, []);
+		pollService.getPolls({ page: recentPollsPage, limit: RECENT_POLLS_PAGE_SIZE })
+			.then((data) => {
+				if (!Array.isArray(data)) {
+					setPolls(data.items);
+					setPollsPagination(data.meta);
+				}
+			})
+			.catch(() => {
+				setPolls([]);
+				setPollsPagination(null);
+			});
 
-	const activePolls = polls.filter((poll) => poll.isActive).length;
-	const recentPolls = polls.slice(0, 5);
+		if (user?.role === 'ADMIN') {
+			pollService.getAssignedPrivatePolls({ page: 1, limit: 2 })
+				.then((data) => {
+					if (!Array.isArray(data)) {
+						setAssignedPolls(data.items);
+						setAssignedPollsPagination(data.meta);
+					}
+				})
+				.catch(() => {
+					setAssignedPolls([]);
+					setAssignedPollsPagination(null);
+				});
+		}
+	}, [recentPollsPage, user?.role]);
+
+	const activePolls = pollsPagination?.summary?.activePolls ?? polls.filter((poll) => poll.isActive).length;
+	const totalPolls = pollsPagination?.totalItems ?? polls.length;
+	const totalVotes = pollsPagination?.summary?.totalVotes ?? polls.reduce((sum, poll) => sum + poll.totalVotes, 0);
 
 	const handleInviteAdmin = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -57,9 +85,9 @@ const DashboardHome: React.FC = () => {
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-3">
-				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Total polls</p><p className="text-3xl font-bold text-gray-900">{polls.length}</p></Card>
+				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Total polls</p><p className="text-3xl font-bold text-gray-900">{totalPolls}</p></Card>
 				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Active polls</p><p className="text-3xl font-bold text-gray-900">{activePolls}</p></Card>
-				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Total vote submissions</p><p className="text-3xl font-bold text-gray-900">{polls.reduce((sum, poll) => sum + poll.totalVotes, 0)}</p></Card>
+				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Total vote submissions</p><p className="text-3xl font-bold text-gray-900">{totalVotes}</p></Card>
 			</div>
 
 			{user?.role === 'ADMIN' && (
@@ -70,7 +98,7 @@ const DashboardHome: React.FC = () => {
 							<p className="text-slate-600">Vote on private polls assigned to you by the super admin without exposing them publicly.</p>
 						</div>
 						<div className="flex items-center gap-3">
-							<span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">{assignedPolls.length} assigned</span>
+							<span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">{assignedPollsPagination?.totalItems ?? assignedPolls.length} assigned</span>
 							<Link to="/dashboard/assigned-polls"><Button>Open assigned polls</Button></Link>
 						</div>
 					</div>
@@ -116,7 +144,16 @@ const DashboardHome: React.FC = () => {
 						<h2 className="text-2xl font-bold text-slate-900">Recent polls</h2>
 						<p className="text-sm text-slate-500">Track the latest polls, status, IDs, and total vote submissions.</p>
 					</div>
-					<PollListTable polls={recentPolls} />
+					<PollListTable polls={polls} />
+					{polls.length > 0 ? (
+						<PaginationControls
+							currentPage={pollsPagination?.page ?? 1}
+							totalPages={pollsPagination?.totalPages ?? 1}
+							totalItems={pollsPagination?.totalItems ?? polls.length}
+							itemLabel="polls"
+							onPageChange={setRecentPollsPage}
+						/>
+					) : null}
 				</div>
 
 				{user?.role === 'SUPER_ADMIN' ? (

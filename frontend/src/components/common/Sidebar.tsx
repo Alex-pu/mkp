@@ -20,7 +20,6 @@ const Sidebar: React.FC = () => {
       <div className="border-b border-slate-800 p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Admin workspace</p>
         <h2 className="mt-2 text-2xl font-bold">Opinion Polls</h2>
-        <p className="mt-3 text-sm text-slate-400">Signed in as {user?.email ?? 'administrator'}</p>
         <span className="mt-3 inline-flex rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
           {user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
         </span>

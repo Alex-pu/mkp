@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
           <Link to="/" className="hover:text-white">Home</Link>
           <Link to="/polls" className="hover:text-white">Browse Polls</Link>
-          <Link to="/login" className="hover:text-white">Admin Login</Link>
+          <Link to="/login" className="hover:text-white">Log In</Link>
         </div>
       </div>
     </footer>

@@ -1,10 +1,15 @@
 import api from './api';
-import { Poll, CreatePollInput, UpdatePollInput } from '../types';
+import { Poll, CreatePollInput, UpdatePollInput, PaginatedResult, PaginationParams } from '../types';
+
+const toPaginatedResult = <T>(response: any): PaginatedResult<T> => ({
+	items: response.data.data,
+	meta: response.data.meta,
+});
 
 export const pollService = {
-  async getPolls(): Promise<Poll[]> {
-    const response = await api.get('/polls');
-    return response.data.data;
+  async getPolls(params?: PaginationParams): Promise<Poll[] | PaginatedResult<Poll>> {
+    const response = await api.get('/polls', { params });
+    return params?.page !== undefined || params?.limit !== undefined ? toPaginatedResult<Poll>(response) : response.data.data;
   },
 
   async getPoll(id: string): Promise<Poll> {
@@ -12,9 +17,9 @@ export const pollService = {
     return response.data.data;
   },
 
-  async getAssignedPrivatePolls(): Promise<Poll[]> {
-    const response = await api.get('/polls/assigned/private');
-    return response.data.data;
+  async getAssignedPrivatePolls(params?: PaginationParams): Promise<Poll[] | PaginatedResult<Poll>> {
+    const response = await api.get('/polls/assigned/private', { params });
+    return params?.page !== undefined || params?.limit !== undefined ? toPaginatedResult<Poll>(response) : response.data.data;
   },
 
   async getAssignedPrivatePoll(id: string): Promise<Poll> {
@@ -37,9 +42,9 @@ export const pollService = {
     return response.data.data;
   },
 
-  async getPublicPolls(): Promise<Poll[]> {
-    const response = await api.get('/polls/public');
-    return response.data.data;
+  async getPublicPolls(params?: PaginationParams): Promise<Poll[] | PaginatedResult<Poll>> {
+    const response = await api.get('/polls/public', { params });
+    return params?.page !== undefined || params?.limit !== undefined ? toPaginatedResult<Poll>(response) : response.data.data;
   },
 
   async deletePoll(id: string): Promise<void> {

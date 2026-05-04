@@ -20,7 +20,7 @@ const Navbar: React.FC = () => {
             Explore Polls
           </Link>
           <Link to={isAuthenticated ? '/dashboard' : '/login'} className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
-            {isAuthenticated ? 'Open Dashboard' : 'Admin Login'}
+            {isAuthenticated ? 'Open Dashboard' : 'Log In'}
           </Link>
         </div>
       </div>

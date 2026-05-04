@@ -26,7 +26,7 @@ export interface AnalyticsQuestion {
   type: 'MULTIPLE_CHOICE' | 'OPEN_TEXT';
   totalResponses: number;
   responses: AnalyticsBreakdown[];
-  openTextResponses: AnalyticsTextResponse[];
+  openTextResponseCount: number;
 }
 
 export interface AnalyticsBreakdown {

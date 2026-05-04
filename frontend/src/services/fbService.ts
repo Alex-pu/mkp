@@ -1,5 +1,10 @@
 import api from './api';
-import { CreateFbInput, FbReport, FbReportSummary } from '../types';
+import { CreateFbInput, FbReport, FbReportSummary, PaginatedFbReportSummary, PaginatedResult, PaginationParams } from '../types';
+
+const toPaginatedResult = <T>(response: any): PaginatedResult<T> => ({
+  items: response.data.data,
+  meta: response.data.meta,
+});
 
 export const fbService = {
   async createReport(input: CreateFbInput): Promise<FbReport> {
@@ -7,13 +12,23 @@ export const fbService = {
     return response.data.data;
   },
 
-  async getMyReports(): Promise<FbReport[]> {
+  async getMyReports(params?: PaginationParams): Promise<FbReport[] | PaginatedResult<FbReport>> {
+    if (params?.page !== undefined || params?.limit !== undefined) {
+      const paginatedResponse = await api.get('/fb/me', { params });
+      return toPaginatedResult<FbReport>(paginatedResponse);
+    }
     const response = await api.get('/fb/me');
     return response.data.data;
   },
 
-  async getSummary(): Promise<FbReportSummary> {
-    const response = await api.get('/fb');
+  async getSummary(params?: PaginationParams): Promise<FbReportSummary | PaginatedFbReportSummary> {
+    const response = await api.get('/fb', { params });
+    if (params?.page !== undefined || params?.limit !== undefined) {
+      return {
+        ...response.data.data,
+        meta: response.data.meta,
+      };
+    }
     return response.data.data;
   },
 };

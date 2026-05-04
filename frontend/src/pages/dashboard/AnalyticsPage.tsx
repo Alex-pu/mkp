@@ -56,7 +56,7 @@ const AnalyticsPage: React.FC = () => {
 						data={question.responses}
 						totalResponses={question.totalResponses}
 					/>
-					<ResponseTable title="Open text responses" responses={question.openTextResponses} />
+					<ResponseTable title="Open text responses" pollId={analytics.pollId} questionId={question.id} totalResponses={question.openTextResponseCount} />
 				</div>
 			))}
 		</div>

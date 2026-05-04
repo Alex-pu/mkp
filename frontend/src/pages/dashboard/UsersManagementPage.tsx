@@ -3,9 +3,12 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { authService } from '../../services/authService';
-import { ManagedUser } from '../../types';
+import { ManagedUser, PaginationMeta } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import PaginationControls from '../../components/common/PaginationControls';
+
+const USERS_PAGE_SIZE = 10;
 
 const UsersManagementPage: React.FC = () => {
   const { user: currentUser } = useAuth();
@@ -19,13 +22,18 @@ const UsersManagementPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
 
-  const loadUsers = async () => {
+  const loadUsers = async (page = currentPage) => {
     setLoading(true);
     setError('');
     try {
-      const data = await authService.getUsers();
-      setUsers(data);
+      const data = await authService.getUsers({ page, limit: USERS_PAGE_SIZE });
+      if (!Array.isArray(data)) {
+        setUsers(data.items);
+        setPagination(data.meta);
+      }
     } catch (loadError: any) {
       setError(loadError.response?.data?.message || 'Failed to load users');
     } finally {
@@ -34,14 +42,14 @@ const UsersManagementPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers(currentPage);
+  }, [currentPage]);
 
   const totals = useMemo(() => ({
-    total: users.length,
-    active: users.filter((user) => user.isActive).length,
-    superAdmins: users.filter((user) => user.role === 'SUPER_ADMIN').length,
-  }), [users]);
+    total: pagination?.totalItems ?? users.length,
+    active: pagination?.summary?.activeUsers ?? users.filter((user) => user.isActive).length,
+    superAdmins: pagination?.summary?.superAdmins ?? users.filter((user) => user.role === 'SUPER_ADMIN').length,
+  }), [pagination, users]);
 
   const handleStatusToggle = async (managedUser: ManagedUser) => {
     setPendingUserId(managedUser.id);
@@ -51,6 +59,7 @@ const UsersManagementPage: React.FC = () => {
       const updatedUser = await authService.updateUserStatus(managedUser.id, !managedUser.isActive);
       setUsers((current) => current.map((user) => user.id === updatedUser.id ? updatedUser : user));
       setMessage(updatedUser.isActive ? `${updatedUser.email} has been reactivated.` : `${updatedUser.email} has been suspended.`);
+      await loadUsers(currentPage);
     } catch (statusError: any) {
       setError(statusError.response?.data?.message || 'Failed to update user status');
     } finally {
@@ -102,6 +111,7 @@ const UsersManagementPage: React.FC = () => {
       const updatedUser = await authService.updateUserPassword(passwordUser.id, { password: newPassword });
       setUsers((current) => current.map((user) => user.id === updatedUser.id ? updatedUser : user));
       setMessage(`Password updated for ${updatedUser.email}.`);
+      await loadUsers(currentPage);
       setPasswordUser(null);
       setNewPassword('');
       setConfirmPassword('');
@@ -220,6 +230,8 @@ const UsersManagementPage: React.FC = () => {
           </div>
         )}
       </Card>
+
+      <PaginationControls currentPage={pagination?.page ?? 1} totalPages={pagination?.totalPages ?? 1} totalItems={pagination?.totalItems ?? users.length} itemLabel="users" onPageChange={setCurrentPage} />
 
       {passwordUser ? (
         <Card className="rounded-3xl border border-blue-200 bg-blue-50/70 shadow-soft">

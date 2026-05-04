@@ -35,7 +35,7 @@ const EditPollPage: React.FC = () => {
 			return;
 		}
 
-		authService.getAdmins().then(setAdmins).catch(() => setAdmins([]));
+		authService.getAdmins().then((data) => setAdmins(Array.isArray(data) ? data : data.items)).catch(() => setAdmins([]));
 	}, [user?.role]);
 
 	const handleSubmit = async (values: PollFormValues) => {

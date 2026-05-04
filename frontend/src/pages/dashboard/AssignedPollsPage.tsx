@@ -3,20 +3,31 @@ import { Link } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Button from '../../components/common/Button';
+import PaginationControls from '../../components/common/PaginationControls';
 import { pollService } from '../../services/pollService';
-import { Poll } from '../../types';
+import { PaginationMeta, Poll } from '../../types';
+
+const ASSIGNED_POLLS_PAGE_SIZE = 6;
 
 const AssignedPollsPage: React.FC = () => {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
 
   useEffect(() => {
-    pollService.getAssignedPrivatePolls()
-      .then(setPolls)
+    setLoading(true);
+    pollService.getAssignedPrivatePolls({ page: currentPage, limit: ASSIGNED_POLLS_PAGE_SIZE })
+      .then((result) => {
+        if (!Array.isArray(result)) {
+          setPolls(result.items);
+          setPagination(result.meta);
+        }
+      })
       .catch((loadError: any) => setError(loadError.response?.data?.message || 'Failed to load assigned private polls'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [currentPage]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -37,6 +48,7 @@ const AssignedPollsPage: React.FC = () => {
           <p className="mt-2 text-slate-500">When a super admin assigns a private poll to you, it will appear here.</p>
         </Card>
       ) : (
+        <>
         <div className="grid gap-5 lg:grid-cols-2">
           {polls.map((poll) => (
             <Card key={poll.id} className="rounded-3xl border border-slate-200 bg-white shadow-soft">
@@ -74,6 +86,8 @@ const AssignedPollsPage: React.FC = () => {
             </Card>
           ))}
         </div>
+        <PaginationControls currentPage={pagination?.page ?? 1} totalPages={pagination?.totalPages ?? 1} totalItems={pagination?.totalItems ?? polls.length} itemLabel="assigned polls" onPageChange={setCurrentPage} />
+        </>
       )}
     </div>
   );

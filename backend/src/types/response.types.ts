@@ -3,6 +3,22 @@ export interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+  meta?: PaginationMeta;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  summary?: Record<string, number>;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  pagination: PaginationMeta;
 }
 
 export interface AnalyticsResponseBreakdown {
@@ -26,7 +42,7 @@ export interface AnalyticsQuestion {
   type: string;
   totalResponses: number;
   responses: AnalyticsResponseBreakdown[];
-  openTextResponses: AnalyticsTextResponse[];
+  openTextResponseCount: number;
 }
 
 export interface AnalyticsData {

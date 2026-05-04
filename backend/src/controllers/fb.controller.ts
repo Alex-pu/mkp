@@ -3,6 +3,7 @@ import { FbService } from '../services/fb.service';
 import { sendSuccess } from '../utils/apiResponse';
 import { catchAsync } from '../utils/catchAsync';
 import { CreateFbInput } from '../types';
+import { parsePaginationQuery } from '../utils/pagination';
 
 interface AuthRequest extends Request {
   user?: {
@@ -18,11 +19,22 @@ export const createFbReport = catchAsync(async (req: AuthRequest, res: Response)
 });
 
 export const getMyFbReports = catchAsync(async (req: AuthRequest, res: Response) => {
-  const reports = await FbService.getMyReports(req.user!.id);
+  const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+  const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+  const last24HoursOnly = req.query.last24HoursOnly === 'true';
+  const reports = await FbService.getMyReports(req.user!.id, { search, last24HoursOnly }, pagination ?? undefined);
+  if (pagination && !Array.isArray(reports)) {
+    return sendSuccess(res, reports.items, 'Success', 200, reports.pagination);
+  }
   sendSuccess(res, reports);
 });
 
 export const getFbSummary = catchAsync(async (_req: AuthRequest, res: Response) => {
-  const summary = await FbService.getSummary();
+  const pagination = parsePaginationQuery(_req.query as Record<string, unknown>);
+  const search = typeof _req.query.search === 'string' ? _req.query.search : undefined;
+  const summary = await FbService.getSummary({ search }, pagination ?? undefined);
+  if (pagination && 'data' in summary) {
+    return sendSuccess(res, summary.data, 'Success', 200, summary.pagination);
+  }
   sendSuccess(res, summary);
 });
