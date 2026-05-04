@@ -5,6 +5,7 @@ import questionRoutes from './question.routes';
 import questionManagementRoutes from './question-management.routes';
 import voteRoutes from './vote.routes';
 import analyticsRoutes from './analytics.routes';
+import fbRoutes from './fb.routes';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/polls/:pollId/questions', questionRoutes);
 router.use('/questions', questionManagementRoutes);
 router.use('/polls', voteRoutes);
 router.use('/polls', analyticsRoutes);
+router.use('/fb', fbRoutes);
 
 export default router;

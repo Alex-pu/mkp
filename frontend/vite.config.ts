@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3003,
+    allowedHosts: ['nonlarcenous-jovani-discrepantly.ngrok-free.dev'],
     proxy: {
       '/api': {
         target: 'http://localhost:5002',

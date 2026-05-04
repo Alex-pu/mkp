@@ -26,6 +26,7 @@ model User {
   // Relations
   createdPolls   Poll[]
   assignedPolls  PollAssignment[] @relation("AssignedPolls")
+  fbReports      Fb[]
 
   @@map("users")
 }
@@ -155,4 +156,18 @@ model Vote {
   poll        Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
 
   @@map("votes")
+}
+
+model Fb {
+  id        String   @id @default(cuid())
+  adminId   String
+  text      String
+  links     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, createdAt])
+  @@map("Fb")
 }

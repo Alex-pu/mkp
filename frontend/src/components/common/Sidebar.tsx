@@ -10,6 +10,7 @@ const Sidebar: React.FC = () => {
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/dashboard/polls', label: 'Polls' },
     { path: '/dashboard/polls/create', label: 'Create Poll' },
+    { path: '/dashboard/facebook-reports', label: 'Facebook & WhatsApp Reports' },
     ...(user?.role === 'SUPER_ADMIN' ? [{ path: '/dashboard/users', label: 'User Management' }] : []),
     ...(user?.role === 'ADMIN' ? [{ path: '/dashboard/assigned-polls', label: 'Assigned Polls' }] : []),
   ];
@@ -33,6 +34,7 @@ const Sidebar: React.FC = () => {
                 className={`block rounded-xl px-4 py-3 text-sm font-medium transition ${
                   (location.pathname === item.path
                     || (item.path === '/dashboard/assigned-polls' && location.pathname.startsWith('/dashboard/assigned-polls'))
+                    || (item.path === '/dashboard/facebook-reports' && location.pathname.startsWith('/dashboard/facebook-reports'))
                     || (item.path === '/dashboard/users' && location.pathname.startsWith('/dashboard/users')))
                     ? 'bg-white text-slate-950' : 'text-slate-300 hover:bg-slate-900 hover:text-white'
                 }`}

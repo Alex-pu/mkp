@@ -260,6 +260,7 @@ export class PollService {
   static async getAssignedPrivatePolls(userId: string): Promise<Poll[]> {
     const polls = await prisma.poll.findMany({
       where: {
+        isActive: true,
         isPublic: false,
         assignments: {
           some: { adminId: userId },
@@ -278,6 +279,7 @@ export class PollService {
         ? { id, isPublic: false }
         : {
             id,
+            isActive: true,
             isPublic: false,
             assignments: {
               some: { adminId: userId },

@@ -18,6 +18,7 @@ import AnalyticsPage from '../pages/dashboard/AnalyticsPage';
 import AssignedPollsPage from '../pages/dashboard/AssignedPollsPage';
 import AssignedPollVotePage from '../pages/dashboard/AssignedPollVotePage';
 import UsersManagementPage from '../pages/dashboard/UsersManagementPage';
+import FacebookReportsPage from '../pages/dashboard/FacebookReportsPage';
 
 // Layouts
 import PublicLayout from '../layouts/PublicLayout';
@@ -52,6 +53,7 @@ const AppRoutes = () => {
         <Route path="polls/create" element={<CreatePollPage />} />
         <Route path="polls/:id/edit" element={<EditPollPage />} />
         <Route path="polls/:id/analytics" element={<AnalyticsPage />} />
+        <Route path="facebook-reports" element={<FacebookReportsPage />} />
         <Route path="users" element={<UsersManagementPage />} />
         <Route path="assigned-polls" element={<AssignedPollsPage />} />
         <Route path="assigned-polls/:id/vote" element={<AssignedPollVotePage />} />

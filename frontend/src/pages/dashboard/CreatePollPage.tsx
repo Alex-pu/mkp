@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { pollService } from '../../services/pollService';
 import { authService } from '../../services/authService';
 import CreatePollForm, { PollFormValues } from '../../components/dashboard/CreatePollForm';
 import { AssignableAdmin } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
+import { Poll } from '../../types';
+import CreatePollSuccess from '../../components/dashboard/CreatePollSuccess';
 
 const CreatePollPage: React.FC = () => {
-	const navigate = useNavigate();
 	const { user } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [admins, setAdmins] = useState<AssignableAdmin[]>([]);
 	const [adminsLoaded, setAdminsLoaded] = useState(false);
+	const [createdPoll, setCreatedPoll] = useState<Poll | null>(null);
 
 	React.useEffect(() => {
 		if (user?.role !== 'SUPER_ADMIN' || adminsLoaded) {
@@ -43,7 +44,7 @@ const CreatePollPage: React.FC = () => {
 					options: question.type === 'MULTIPLE_CHOICE' ? question.options.map((option, optionIndex) => ({ text: option.text, order: optionIndex })) : [],
 				})),
 			});
-			navigate(`/dashboard/polls/${poll.id}/edit`);
+			setCreatedPoll(poll);
 		} catch (submitError: any) {
 			setError(submitError.response?.data?.message || 'Failed to create poll');
 		} finally {
@@ -57,14 +58,24 @@ const CreatePollPage: React.FC = () => {
 				<h1 className="text-3xl font-bold text-slate-900">Create a new poll</h1>
 				<p className="mt-1 text-slate-500">Build polls with multiple questions, mixed response types, and ready-to-launch status control.</p>
 			</div>
-			<CreatePollForm
-				submitLabel="Create poll"
-				loading={loading}
-				error={error}
-				assignableAdmins={admins}
-				allowPrivateAssignments={user?.role === 'SUPER_ADMIN'}
-				onSubmit={handleSubmit}
-			/>
+			{createdPoll ? (
+				<CreatePollSuccess
+					poll={createdPoll}
+					onCreateAnother={() => {
+						setCreatedPoll(null);
+						setError('');
+					}}
+				/>
+			) : (
+				<CreatePollForm
+					submitLabel="Create poll"
+					loading={loading}
+					error={error}
+					assignableAdmins={admins}
+					allowPrivateAssignments={user?.role === 'SUPER_ADMIN'}
+					onSubmit={handleSubmit}
+				/>
+			)}
 		</div>
 	);
 };
