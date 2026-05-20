@@ -1,4 +1,5 @@
 export interface VoteInput {
+  voterToken?: string;
   responses: ResponseInput[];
 }
 

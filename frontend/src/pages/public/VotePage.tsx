@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { usePoll } from '../../hooks/usePoll';
@@ -10,7 +11,7 @@ import VoteSuccess from '../../components/poll/VoteSuccess';
 const VotePage: React.FC = () => {
 	const { id } = useParams();
 	const { poll, loading, error, fetchPublicPoll } = usePoll();
-	const { submitVote, loading: submitting, error: submitError } = useVote();
+	const { submitVote, loading: submitting, error: submitError, alreadyVoted } = useVote();
 	const [submitted, setSubmitted] = useState(false);
 
 	useEffect(() => {
@@ -50,6 +51,25 @@ const VotePage: React.FC = () => {
 
 	if (submitted) {
 		return <VoteSuccess />;
+	}
+
+	if (alreadyVoted) {
+		return (
+			<Card className="mx-auto max-w-2xl rounded-3xl border border-amber-200 bg-white text-center shadow-soft">
+				<div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-2xl text-amber-600">
+					!
+				</div>
+				<h1 className="mt-4 text-3xl font-bold text-slate-900">You already voted</h1>
+				<div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+					<Link to="/polls">
+						<Button>Browse more polls</Button>
+					</Link>
+					<Link to="/">
+						<Button variant="secondary">Back to homepage</Button>
+					</Link>
+				</div>
+			</Card>
+		);
 	}
 
 	return (

@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../config/database';
 import { VoteInput } from '../types';
 import { generateVoterToken } from '../utils/helpers';
@@ -22,7 +23,27 @@ export class VoteService {
       throw new Error('All questions must be answered');
     }
 
-    const voterToken = generateVoterToken();
+    const voterToken = input.voterToken?.trim();
+
+    if (!voterToken) {
+      const error = new Error('Missing voter token for public vote');
+      (error as Error & { statusCode?: number }).statusCode = 400;
+      throw error;
+    }
+
+    const existingVote = await prisma.vote.findFirst({
+      where: {
+        pollId,
+        voterToken,
+      },
+      select: { id: true },
+    });
+
+    if (existingVote) {
+      const error = new Error('You have already voted in this poll');
+      (error as Error & { statusCode?: number }).statusCode = 409;
+      throw error;
+    }
 
     const responses = poll.questions.map((question: any) => {
       const response = input.responses.find((item) => item.questionId === question.id);
@@ -76,19 +97,29 @@ export class VoteService {
       };
     });
 
-    const [, createdResponses] = await prisma.$transaction([
-      prisma.vote.create({
-        data: {
-          pollId,
-          voterToken,
-        },
-      }),
-      prisma.response.createMany({
-        data: responses,
-      }),
-    ]);
+    try {
+      const [, createdResponses] = await prisma.$transaction([
+        prisma.vote.create({
+          data: {
+            pollId,
+            voterToken,
+          },
+        }),
+        prisma.response.createMany({
+          data: responses,
+        }),
+      ]);
 
-    return createdResponses;
+      return createdResponses;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const duplicateVoteError = new Error('You have already voted in this poll');
+        (duplicateVoteError as Error & { statusCode?: number }).statusCode = 409;
+        throw duplicateVoteError;
+      }
+
+      throw error;
+    }
   }
 
   static async submitAssignedVote(pollId: string, userId: string, role: 'SUPER_ADMIN' | 'ADMIN', input: VoteInput, ipAddress?: string, userAgent?: string) {

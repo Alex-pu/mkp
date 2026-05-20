@@ -10,7 +10,24 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3003',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:3003',
+      'http://localhost:3000',
+      'http://localhost:5002',
+      'http://10.0.2.2:8081', // Android emulator to host
+      'exp://192.168.1.136:8081', // Expo Go
+      /^exp:\/\/.*/, // All Expo Go origins
+    ];
+    
+    if (!origin || allowedOrigins.some(allowed => 
+      allowed instanceof RegExp ? allowed.test(origin) : allowed === origin
+    )) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
   credentials: true,
 }));
 

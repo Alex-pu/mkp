@@ -47,6 +47,7 @@ export const UpdateQuestionSchema = z.object({
 });
 
 export const VoteSchema = z.object({
+  voterToken: z.string().min(1).optional(),
   responses: z.array(z.object({
     questionId: z.string(),
     optionId: z.string().optional(),

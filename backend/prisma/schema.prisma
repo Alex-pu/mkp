@@ -148,12 +148,14 @@ model Response {
 model Vote {
   id          String   @id @default(cuid())
   pollId      String
-  voterToken  String?   // Unique token per voting session
+  voterToken  String    // Unique token per voting session
 
   createdAt   DateTime @default(now())
 
   // Relations
   poll        Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, voterToken])
 
   @@map("votes")
 }
