@@ -11,22 +11,31 @@ Backend API for the Opinion Polls System.
 
 2. Set up database:
    - Install PostgreSQL
-   - Create a database named `polls_db`
-   - Update DATABASE_URL in .env if needed
+   - Create a database named `polls`
+   - Set `DATABASE_URL` in `.env` to a PostgreSQL connection string for that database (see `.env.example`)
 
 3. Run Prisma migrations:
    ```bash
-   npm run prisma:migrate
    npm run prisma:generate
+   npm run prisma:migrate
    ```
 
-4. Seed initial admin user:
+4. Add the initial super admin credentials to `backend/.env` (create the file if needed):
+   ```env
+   SEED_ADMIN_EMAIL=admin@example.com
+   SEED_ADMIN_PASSWORD=replace-with-a-strong-password
+   SEED_ADMIN_NAME=Super Admin
+   ```
+
+5. From the `backend` directory, run the seed command:
    ```bash
    npm run seed
    ```
-   Default admin: email `admin@example.com`, password `admin123`
+   This creates a `SUPER_ADMIN` account. If an account with that email already exists, it is left unchanged, including its password.
 
-5. Start development server:
+6. Sign in to the web app using `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`.
+
+7. Start development server:
    ```bash
    npm run dev
    ```
@@ -45,3 +54,4 @@ Backend API for the Opinion Polls System.
 - GET /api/polls/:id/public
 - POST /api/polls/:id/vote
 - GET /api/polls/:id/analytics
+- GET /api/polls/:id/report.pdf (authenticated admin PDF download)

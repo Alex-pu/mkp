@@ -53,6 +53,7 @@ export interface AnalyticsData {
   lifetimeResults: true;
   totalVotes: number;
   totalResponses: number;
+  firstResponseAt: Date | null;
   lastUpdatedAt: Date | null;
   questions: AnalyticsQuestion[];
 }

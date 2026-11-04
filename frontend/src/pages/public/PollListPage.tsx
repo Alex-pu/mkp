@@ -30,7 +30,8 @@ const PollListPage: React.FC = () => {
           setPagination(data.meta);
         }
       } catch (error) {
-        console.error('Failed to fetch polls:', error);
+        setPolls([]);
+        setPagination(null);
       } finally {
         setLoading(false);
       }

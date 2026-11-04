@@ -6,11 +6,37 @@ import { useAnalytics } from '../../hooks/useAnalytics';
 import AnalyticsChart from '../../components/dashboard/AnalyticsChart';
 import ResponseTable from '../../components/dashboard/ResponseTable';
 import { useAuth } from '../../hooks/useAuth';
+import Button from '../../components/common/Button';
+import { analyticsService } from '../../services/analyticsService';
 
 const AnalyticsPage: React.FC = () => {
 	const { id } = useParams();
 	const { analytics, loading, error } = useAnalytics(id);
+	const [downloadingReport, setDownloadingReport] = React.useState(false);
+	const [downloadError, setDownloadError] = React.useState<string | null>(null);
 	useAuth();
+
+	const handleDownloadReport = async () => {
+		if (!analytics) return;
+
+		setDownloadingReport(true);
+		setDownloadError(null);
+		try {
+			const pdf = await analyticsService.downloadPollReport(analytics.pollId);
+			const url = window.URL.createObjectURL(pdf);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = `poll-${analytics.pollId}-report.pdf`;
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+		} catch {
+			setDownloadError('Could not download the PDF report. Please try again.');
+		} finally {
+			setDownloadingReport(false);
+		}
+	};
 
 	if (loading) {
 		return <LoadingSpinner />;
@@ -29,6 +55,12 @@ const AnalyticsPage: React.FC = () => {
 						<h1 className="mt-2 text-3xl font-bold text-gray-900">{analytics.pollTitle}</h1>
 						<p className="mt-2 text-gray-600">These results include every recorded submission ever made for this specific poll.</p>
 						{analytics.pollDescription ? <p className="mt-2 max-w-3xl text-sm text-slate-500">{analytics.pollDescription}</p> : null}
+						<div className="mt-4 flex flex-wrap items-center gap-3">
+							<Button variant="secondary" onClick={handleDownloadReport} disabled={downloadingReport}>
+								{downloadingReport ? 'Preparing PDF…' : 'Download PDF report'}
+							</Button>
+							{downloadError ? <p className="text-sm text-red-600" role="alert">{downloadError}</p> : null}
+						</div>
 					</div>
 					<div className="grid gap-3 sm:grid-cols-3 lg:min-w-[420px]">
 						<div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">

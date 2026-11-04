@@ -1,33 +1,36 @@
 import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
 import { hashPassword } from '../utils/helpers';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const hashedPassword = await hashPassword('admin123');
+  const email = process.env.SEED_ADMIN_EMAIL?.trim();
+  const password = process.env.SEED_ADMIN_PASSWORD;
+  const name = process.env.SEED_ADMIN_NAME?.trim() || 'Super Admin';
 
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
-    update: {
-      password: hashedPassword,
-      name: 'Super Admin',
-      role: 'SUPER_ADMIN',
-      isActive: true,
-    },
+  if (!email || !password) {
+    throw new Error('Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD in backend/.env before running the seed command.');
+  }
+
+  const hashedPassword = await hashPassword(password);
+
+  await prisma.user.upsert({
+    where: { email },
+    update: {},
     create: {
-      email: 'admin@example.com',
+      email,
       password: hashedPassword,
-      name: 'Super Admin',
+      name,
       role: 'SUPER_ADMIN',
     },
   });
-
-  console.log('Super admin user created:', admin.email);
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch(() => {
     process.exit(1);
   })
   .finally(async () => {

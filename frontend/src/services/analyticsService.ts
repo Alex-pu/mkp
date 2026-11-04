@@ -12,6 +12,11 @@ export const analyticsService = {
     return response.data.data;
   },
 
+  async downloadPollReport(pollId: string): Promise<Blob> {
+    const response = await api.get(`/polls/${pollId}/report.pdf`, { responseType: 'blob' });
+    return response.data;
+  },
+
   async getQuestionOpenTextResponses(pollId: string, questionId: string, params: PaginationParams): Promise<PaginatedResult<AnalyticsTextResponse>> {
     const response = await api.get(`/polls/${pollId}/questions/${questionId}/open-text-responses`, { params });
     return toPaginatedResult<AnalyticsTextResponse>(response);

@@ -15,14 +15,13 @@ const DashboardLayout: React.FC = () => {
 				<header className="border-b border-slate-200 bg-white px-6 py-5 shadow-sm">
 					<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
 						<div className="flex items-center gap-4">
-							<img src={logo} alt="Opinion Polls logo" className="h-12 w-12 object-contain" />
+							<img src={logo} alt="PollMaster logo" className="h-12 w-12 object-contain" />
 							<div>
-							<p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">Dashboard</p>
-							<h1 className="text-2xl font-bold text-slate-900">Manage polls and analytics</h1>
+							<h1 className="text-2xl font-bold text-slate-900">PollMaster</h1>
 							</div>
 						</div>
 						<div className="text-sm text-slate-600">
-							Logged in as <span className="font-semibold text-slate-900">{user?.email ?? 'admin@example.com'}</span>
+							<span className="font-semibold text-slate-900">{user?.email ?? ''}</span>
 						</div>
 					</div>
 				</header>

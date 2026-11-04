@@ -112,6 +112,15 @@ export class AnalyticsService {
       lifetimeResults: true,
       totalVotes: poll.votes.length,
       totalResponses: poll.responses.length,
+      firstResponseAt: poll.responses.length > 0
+        ? poll.responses.reduce((earliest: Date | null, response: any) => {
+            if (!earliest || response.createdAt < earliest) {
+              return response.createdAt;
+            }
+
+            return earliest;
+          }, null)
+        : null,
       lastUpdatedAt: poll.responses.length > 0
         ? poll.responses.reduce((latest: Date | null, response: any) => {
             if (!latest || response.createdAt > latest) {
@@ -122,6 +131,30 @@ export class AnalyticsService {
           }, null)
         : null,
       questions,
+    };
+  }
+
+  static async getPollReportData(pollId: string, userId?: string, role: 'SUPER_ADMIN' | 'ADMIN' = 'ADMIN') {
+    const analytics = await this.getPollAnalytics(pollId, userId, role);
+    const writtenResponses = await prisma.response.findMany({
+      where: { pollId, openText: { not: null } },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        questionId: true,
+        openText: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      analytics,
+      writtenResponses: writtenResponses.map((response) => ({
+        id: response.id,
+        questionId: response.questionId,
+        text: response.openText ?? '',
+        createdAt: response.createdAt,
+      })),
     };
   }
 

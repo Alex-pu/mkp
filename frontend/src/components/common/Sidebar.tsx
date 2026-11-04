@@ -18,8 +18,8 @@ const Sidebar: React.FC = () => {
   return (
     <aside className="flex w-full flex-col border-r border-slate-200 bg-slate-950 text-white md:w-72">
       <div className="border-b border-slate-800 p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Admin workspace</p>
-        <h2 className="mt-2 text-2xl font-bold">Opinion Polls</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Workspace</p>
+        <h2 className="mt-2 text-2xl font-bold">PollMaster</h2>
         <span className="mt-3 inline-flex rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
           {user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
         </span>
@@ -52,7 +52,7 @@ const Sidebar: React.FC = () => {
           onClick={logout}
           className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
         >
-          Logout
+          Log out
         </button>
       </div>
     </aside>

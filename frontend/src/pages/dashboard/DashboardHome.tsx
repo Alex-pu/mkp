@@ -81,13 +81,13 @@ const DashboardHome: React.FC = () => {
 		<div className="space-y-6">
 			<div>
 				<h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-				<p className="text-gray-600 mt-1">Manage polls and review participation at a glance.</p>
+				<p className="text-gray-600 mt-1">Poll activity and recent responses.</p>
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-3">
 				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Total polls</p><p className="text-3xl font-bold text-gray-900">{totalPolls}</p></Card>
 				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Active polls</p><p className="text-3xl font-bold text-gray-900">{activePolls}</p></Card>
-				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Total vote submissions</p><p className="text-3xl font-bold text-gray-900">{totalVotes}</p></Card>
+				<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft"><p className="text-sm text-gray-500">Total votes</p><p className="text-3xl font-bold text-gray-900">{totalVotes}</p></Card>
 			</div>
 
 			{user?.role === 'ADMIN' && (
@@ -95,7 +95,7 @@ const DashboardHome: React.FC = () => {
 					<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 						<div>
 							<h2 className="text-xl font-semibold text-slate-900">Assigned private polls</h2>
-							<p className="text-slate-600">Vote on private polls assigned to you by the super admin without exposing them publicly.</p>
+							<p className="text-slate-600">Private polls assigned to your account.</p>
 						</div>
 						<div className="flex items-center gap-3">
 							<span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">{assignedPollsPagination?.totalItems ?? assignedPolls.length} assigned</span>
@@ -109,7 +109,7 @@ const DashboardHome: React.FC = () => {
 									<div className="flex items-start justify-between gap-4">
 										<div>
 											<h3 className="text-lg font-semibold text-slate-900">{poll.title}</h3>
-											<p className="mt-1 text-sm text-slate-500">{poll.description || 'Private poll assigned for dashboard voting.'}</p>
+											{poll.description && <p className="mt-1 text-sm text-slate-500">{poll.description}</p>}
 										</div>
 										<span className={`rounded-full px-3 py-1 text-xs font-semibold ${poll.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{poll.isActive ? 'Open now' : 'Inactive'}</span>
 									</div>
@@ -128,11 +128,10 @@ const DashboardHome: React.FC = () => {
 				<div className="flex items-center justify-between gap-4">
 					<div>
 						<h2 className="text-xl font-semibold text-gray-900">Quick actions</h2>
-						<p className="text-gray-600">Create a new poll or review existing ones.</p>
 					</div>
 					<div className="flex gap-3">
 						{user?.role === 'SUPER_ADMIN' ? <Link to="/dashboard/users"><Button variant="secondary">User management</Button></Link> : null}
-						<Link to="/dashboard/polls"><Button variant="secondary">View polls</Button></Link>
+						<Link to="/dashboard/polls"><Button variant="secondary">Browse polls</Button></Link>
 						<Link to="/dashboard/polls/create"><Button>Create poll</Button></Link>
 					</div>
 				</div>
@@ -142,7 +141,6 @@ const DashboardHome: React.FC = () => {
 				<div className="space-y-4">
 					<div>
 						<h2 className="text-2xl font-bold text-slate-900">Recent polls</h2>
-						<p className="text-sm text-slate-500">Track the latest polls, status, IDs, and total vote submissions.</p>
 					</div>
 					<PollListTable polls={polls} />
 					{polls.length > 0 ? (
@@ -159,7 +157,7 @@ const DashboardHome: React.FC = () => {
 				{user?.role === 'SUPER_ADMIN' ? (
 					<Card className="rounded-3xl border border-slate-200 bg-white shadow-soft">
 						<h2 className="text-2xl font-bold text-slate-900">Create account</h2>
-						<p className="mt-2 text-sm text-slate-500">As super admin, you can provision both standard admin and super admin dashboard accounts.</p>
+						<p className="mt-2 text-sm text-slate-500">Add an administrator account.</p>
 						<form onSubmit={handleInviteAdmin} className="mt-6 space-y-4">
 							<Input label="Name" value={inviteData.name} onChange={(event) => setInviteData((current) => ({ ...current, name: event.target.value }))} />
 							<Input label="Email" type="email" value={inviteData.email} onChange={(event) => setInviteData((current) => ({ ...current, email: event.target.value }))} required />
