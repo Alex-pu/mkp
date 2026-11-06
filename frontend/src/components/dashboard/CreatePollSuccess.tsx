@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Poll } from '../../types';
 import Button from '../common/Button';
 import Card from '../common/Card';
+import QuestionnaireDownloadButton from './QuestionnaireDownloadButton';
 
 interface CreatePollSuccessProps {
 	poll: Poll;
@@ -20,6 +21,7 @@ const CreatePollSuccess: React.FC<CreatePollSuccessProps> = ({ poll, onCreateAno
 				{poll.title} is ready and {poll.isActive ? 'can start receiving votes now.' : 'is saved as inactive until you are ready to open it.'}
 			</p>
 			<div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+				<QuestionnaireDownloadButton pollId={poll.id} pollTitle={poll.title} />
 				<Link to={`/dashboard/polls/${poll.id}/edit`}>
 					<Button>Edit poll</Button>
 				</Link>

@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
     <footer className="border-t border-slate-200 bg-slate-950 text-slate-200">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-lg font-semibold text-white">PollMaster</p>
+          <p className="text-lg font-semibold text-white">Pollsmaster</p>
           <p className="mt-2 max-w-xl text-sm text-slate-400">
             Create polls, collect responses, and review results.
           </p>

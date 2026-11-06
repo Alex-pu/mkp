@@ -1,7 +1,7 @@
 {
   "name": "polls-backend",
   "version": "1.0.0",
-  "description": "Backend for Opinion Polls System",
+  "description": "Backend API for Pollsmaster",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",

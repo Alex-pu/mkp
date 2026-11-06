@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Poll } from '../../types';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import QuestionnaireDownloadButton from './QuestionnaireDownloadButton';
 
 interface PollListTableProps {
 	polls: Poll[];
@@ -44,6 +45,7 @@ const PollListTable: React.FC<PollListTableProps> = ({ polls, onDelete }) => {
 									</td>
 									<td className="px-4 py-4">
 										<div className="flex justify-end gap-2">
+										<QuestionnaireDownloadButton pollId={poll.id} pollTitle={poll.title} size="sm" />
 											<Link to={`/dashboard/polls/${poll.id}/analytics`}><Button variant="secondary" size="sm">Analytics</Button></Link>
 											<Link to={`/dashboard/polls/${poll.id}/edit`}><Button size="sm">Edit</Button></Link>
 											{onDelete && <Button variant="danger" size="sm" onClick={() => onDelete(poll.id)}>Delete</Button>}

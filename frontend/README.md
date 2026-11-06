@@ -1,6 +1,6 @@
-# Polls Frontend
+# Pollsmaster Web App
 
-Frontend for the Opinion Polls System built with React, TypeScript, and Vite.
+Web app for Pollsmaster, built with React, TypeScript, and Vite.
 
 ## Setup
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getPolls, getPoll, createPoll, updatePoll, deletePoll, getPublicPolls, getPublicPoll, getAssignedPrivatePolls, getAssignedPrivatePoll } from '../controllers/poll.controller';
+import { getPolls, getPoll, createPoll, updatePoll, deletePoll, getPublicPolls, getPublicPoll, getAssignedPrivatePolls, getAssignedPrivatePoll, downloadPollQuestionnaire } from '../controllers/poll.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { requireAdmin } from '../middlewares/admin.middleware';
 import { validate } from '../middlewares/validate.middleware';
@@ -16,6 +16,7 @@ router.get('/:id/public', getPublicPoll);
 // Protected routes
 router.get('/', authenticate, requireAdmin, getPolls);
 router.post('/', authenticate, requireAdmin, validate(CreatePollSchema), createPoll);
+router.get('/:id/questionnaire.pdf', authenticate, requireAdmin, downloadPollQuestionnaire);
 router.get('/:id', authenticate, requireAdmin, getPoll);
 router.put('/:id', authenticate, requireAdmin, validate(UpdatePollSchema), updatePoll);
 router.delete('/:id', authenticate, requireAdmin, deletePoll);

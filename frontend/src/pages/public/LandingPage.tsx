@@ -24,7 +24,7 @@ const LandingPage: React.FC = () => {
         <div className="absolute -bottom-8 right-8 h-48 w-48 rounded-full bg-emerald-200/30 blur-3xl transition-transform duration-500 group-hover:scale-110" />
 
         <div className="relative mx-auto w-full max-w-6xl text-center">
-          <span className="inline-flex rounded-full border border-blue-200 bg-white/85 px-5 py-2 text-sm font-semibold text-blue-700 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">Poll Master for modern teams</span>
+          <span className="inline-flex rounded-full border border-blue-200 bg-white/85 px-5 py-2 text-sm font-semibold text-blue-700 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">Pollsmaster for modern teams</span>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
             Launch beautiful public polls and turn every response into actionable insight.
           </h1>

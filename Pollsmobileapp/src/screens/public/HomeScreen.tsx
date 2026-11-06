@@ -22,7 +22,7 @@ const HomeScreen = ({ navigation }: Props) => (
           <Text style={styles.kicker}>Classic mobile experience</Text>
         </View>
 
-        <Text style={styles.heroTitle}>Poll Master</Text>
+        <Text style={styles.heroTitle}>Pollsmaster</Text>
 
         <View style={styles.heroActions}>
           <Button label="Explore polls" onPress={() => navigation.navigate('PublicPolls')} />

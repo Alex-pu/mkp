@@ -1,6 +1,6 @@
-# Polls Mobile App
+# Pollsmaster Mobile App
 
-React Native mobile client for the existing Polls backend, built with Expo and TypeScript.
+React Native mobile client for the Pollsmaster backend, built with Expo and TypeScript.
 
 ## Features
 

@@ -1,6 +1,6 @@
 import path from 'path';
 import PDFDocument from 'pdfkit';
-import { AnalyticsData, AnalyticsQuestion } from '../types';
+import { AnalyticsData, AnalyticsQuestion, Poll } from '../types';
 
 interface WrittenResponse {
   id: string;
@@ -44,14 +44,14 @@ const formatDateTime = (value: Date) => value.toLocaleString(undefined, {
   minute: '2-digit',
 });
 
-const drawHeader = (document: PDFKit.PDFDocument) => {
+const drawHeader = (document: PDFKit.PDFDocument, title = 'POLL RESULTS REPORT', subtitle = 'A complete summary of recorded responses') => {
   document.save();
   document.rect(0, 0, PAGE_WIDTH, 112).fill(COLORS.navy);
   document.image(LOGO_PATH, LEFT, 10, { fit: [104, 88] });
   document.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(17)
-    .text('POLL RESULTS REPORT', 170, 35, { width: 360 });
+    .text(title, 170, 35, { width: 360 });
   document.fillColor('#CBD5E1').font('Helvetica').fontSize(9)
-    .text('A complete summary of recorded responses', 171, 61, { width: 350 });
+    .text(subtitle, 171, 61, { width: 350 });
   document.rect(0, 112, PAGE_WIDTH, 4).fill(COLORS.green);
   document.restore();
   document.x = LEFT;
@@ -222,7 +222,7 @@ export class ReportService {
         bufferPages: true,
         info: {
           Title: `${analytics.pollTitle} - Poll Results Report`,
-          Author: 'Poll Master',
+          Author: 'Pollsmaster',
           Subject: 'Poll results and written responses',
         },
       });
@@ -255,7 +255,7 @@ export class ReportService {
       if (analytics.lastUpdatedAt) {
         document.x = LEFT;
         document.fillColor(COLORS.muted).font('Helvetica').fontSize(8)
-          .text(`Response period: ${analytics.firstResponseAt ? formatDate(analytics.firstResponseAt) : ''} – ${formatDate(analytics.lastUpdatedAt)}`);
+          .text(`Response period: ${analytics.firstResponseAt ? formatDate(analytics.firstResponseAt) : ''} - ${formatDate(analytics.lastUpdatedAt)}`);
       } else {
         document.x = LEFT;
         document.fillColor(COLORS.muted).font('Helvetica').fontSize(8)
@@ -289,7 +289,112 @@ export class ReportService {
         document.save();
         document.strokeColor(COLORS.line).moveTo(LEFT, PAGE_HEIGHT - 48).lineTo(RIGHT, PAGE_HEIGHT - 48).stroke();
         document.fillColor(COLORS.muted).font('Helvetica').fontSize(8)
-          .text(`POLL MASTER  |  CONFIDENTIAL REPORT  |  PAGE ${page + 1} OF ${range.count}`, LEFT, PAGE_HEIGHT - 37, {
+          .text(`POLLSMASTER  |  CONFIDENTIAL REPORT  |  PAGE ${page + 1} OF ${range.count}`, LEFT, PAGE_HEIGHT - 37, {
+            width: RIGHT - LEFT,
+            align: 'center',
+            lineBreak: false,
+          });
+        document.restore();
+      }
+
+      document.end();
+    });
+  }
+
+  static createQuestionnairePdf(poll: Poll): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const document = new PDFDocument({
+        size: 'A4',
+        margins: { top: CONTENT_TOP, bottom: 64, left: LEFT, right: PAGE_WIDTH - RIGHT },
+        bufferPages: true,
+        info: {
+          Title: `${poll.title} - Questionnaire`,
+          Author: 'Pollsmaster',
+          Subject: 'Printable poll questionnaire',
+        },
+      });
+      const chunks: Buffer[] = [];
+      document.on('data', (chunk: Buffer) => chunks.push(chunk));
+      document.on('error', reject);
+      document.on('end', () => resolve(Buffer.concat(chunks)));
+      drawHeader(document, 'POLL QUESTIONNAIRE', '');
+
+      document.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(20)
+        .text(poll.title, { width: RIGHT - LEFT });
+      if (poll.description) {
+        document.moveDown(0.35).fillColor(COLORS.muted).font('Helvetica').fontSize(10)
+          .text(poll.description, { width: RIGHT - LEFT });
+      }
+      document.moveDown(0.6).fillColor(COLORS.muted).font('Helvetica').fontSize(8)
+        .text(`Created ${formatDate(poll.createdAt)}  |  ${poll.isPublic ? 'Public poll' : 'Private poll'}`);
+      document.moveDown(0.5).strokeColor(COLORS.line).moveTo(LEFT, document.y).lineTo(RIGHT, document.y).stroke();
+
+      const addPage = () => {
+        document.addPage();
+        drawHeader(document, 'POLL QUESTIONNAIRE', '');
+      };
+      const ensureQuestionnaireSpace = (height: number) => {
+        if (document.y + height > document.page.height - document.page.margins.bottom) addPage();
+      };
+
+      poll.questions.forEach((question, index) => {
+        document.x = LEFT;
+        document.font('Helvetica-Bold').fontSize(13);
+        const questionHeight = document.heightOfString(question.text, { width: RIGHT - LEFT });
+        const answerSpace = question.type === 'OPEN_TEXT' ? 42 : 70;
+        ensureQuestionnaireSpace(questionHeight + answerSpace);
+        document.moveDown(0.8).fillColor(COLORS.green).font('Helvetica-Bold').fontSize(9)
+          .text(`QUESTION ${String(index + 1).padStart(2, '0')}`);
+        document.moveDown(0.2).fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(13)
+          .text(question.text, { width: RIGHT - LEFT });
+        document.moveDown(0.2).fillColor(COLORS.muted).font('Helvetica').fontSize(8)
+          .text(question.type === 'OPEN_TEXT' ? 'WRITTEN RESPONSE' : 'SELECT ONE OPTION');
+        document.moveDown(0.35);
+
+        if (question.type === 'OPEN_TEXT') {
+          ensureQuestionnaireSpace(28);
+          const answerLineY = document.y + 20;
+          document.strokeColor(COLORS.line).moveTo(LEFT + 8, answerLineY).lineTo(RIGHT, answerLineY).stroke();
+          document.y = answerLineY + 8;
+        } else if (question.options.length === 0) {
+          ensureQuestionnaireSpace(24);
+          document.fillColor(COLORS.muted).font('Helvetica').fontSize(9)
+            .text('No answer options have been added.', LEFT + 8);
+        } else {
+          question.options.forEach((option) => {
+            document.font('Helvetica').fontSize(10);
+            const optionHeight = document.heightOfString(option.text, { width: RIGHT - LEFT - 30 });
+            ensureQuestionnaireSpace(Math.max(18, optionHeight) + 12);
+            const optionY = document.y + 2;
+            document.save();
+            document.lineWidth(1).strokeColor(COLORS.muted).rect(LEFT + 8, optionY + 1, 10, 10).stroke();
+            document.restore();
+            document.fillColor(COLORS.ink).font('Helvetica').fontSize(10)
+              .text(option.text, LEFT + 26, optionY, { width: RIGHT - LEFT - 30 });
+            if (/^others?(?:\b|$)/i.test(option.text.trim())) {
+              const writeInStart = LEFT + 62;
+              document.strokeColor(COLORS.line)
+                .moveTo(writeInStart, optionY + 13)
+                .lineTo(RIGHT, optionY + 13)
+                .stroke();
+            }
+            document.y = optionY + Math.max(18, optionHeight) + 8;
+          });
+        }
+
+        document.x = LEFT;
+        ensureQuestionnaireSpace(14);
+        document.moveDown(0.35).strokeColor(COLORS.line).moveTo(LEFT, document.y).lineTo(RIGHT, document.y).stroke();
+      });
+
+      const range = document.bufferedPageRange();
+      for (let page = range.start; page < range.start + range.count; page += 1) {
+        document.switchToPage(page);
+        document.page.margins.bottom = 0;
+        document.save();
+        document.strokeColor(COLORS.line).moveTo(LEFT, PAGE_HEIGHT - 48).lineTo(RIGHT, PAGE_HEIGHT - 48).stroke();
+        document.fillColor(COLORS.muted).font('Helvetica').fontSize(8)
+          .text(`POLLSMASTER  |  QUESTIONNAIRE  |  PAGE ${page + 1} OF ${range.count}`, LEFT, PAGE_HEIGHT - 37, {
             width: RIGHT - LEFT,
             align: 'center',
             lineBreak: false,

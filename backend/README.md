@@ -1,6 +1,6 @@
-# Polls Backend
+# Pollsmaster Backend
 
-Backend API for the Opinion Polls System.
+Backend API for Pollsmaster.
 
 ## Setup
 
@@ -55,3 +55,4 @@ Backend API for the Opinion Polls System.
 - POST /api/polls/:id/vote
 - GET /api/polls/:id/analytics
 - GET /api/polls/:id/report.pdf (authenticated admin PDF download)
+- GET /api/polls/:id/questionnaire.pdf (authenticated admin questionnaire PDF download)

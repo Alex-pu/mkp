@@ -87,7 +87,7 @@ const LoginPage: React.FC = () => {
               </form>
 
               <div className="mt-6 text-center text-sm text-stone-500">
-                Return to <Link to="/" className="font-semibold text-stone-800 transition hover:text-stone-950">Poll Master home</Link>
+                Return to <Link to="/" className="font-semibold text-stone-800 transition hover:text-stone-950">Pollsmaster home</Link>
               </div>
             </Card>
           </div>

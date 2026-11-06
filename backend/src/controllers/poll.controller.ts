@@ -4,6 +4,7 @@ import { sendSuccess } from '../utils/apiResponse';
 import { catchAsync } from '../utils/catchAsync';
 import { CreatePollInput, UpdatePollInput } from '../types';
 import { parsePaginationQuery } from '../utils/pagination';
+import { ReportService } from '../services/report.service';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -24,6 +25,22 @@ export const getPoll = catchAsync(async (req: AuthRequest, res: Response) => {
     return res.status(404).json({ success: false, message: 'Poll not found' });
   }
   sendSuccess(res, poll);
+});
+
+export const downloadPollQuestionnaire = catchAsync(async (req: AuthRequest, res: Response) => {
+  const pollId = req.params.id as string;
+  const poll = await PollService.getPollById(pollId, req.user?.id, req.user?.role);
+  if (!poll) {
+    return res.status(404).json({ success: false, message: 'Poll not found' });
+  }
+
+  const pdf = await ReportService.createQuestionnairePdf(poll);
+  const safeTitle = poll.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'poll';
+  return res
+    .status(200)
+    .type('application/pdf')
+    .setHeader('Content-Disposition', `attachment; filename="${safeTitle}-questionnaire.pdf"`)
+    .send(pdf);
 });
 
 export const getPublicPoll = catchAsync(async (req: Request, res: Response) => {

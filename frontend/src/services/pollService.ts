@@ -17,6 +17,11 @@ export const pollService = {
     return response.data.data;
   },
 
+  async downloadQuestionnaire(id: string): Promise<Blob> {
+    const response = await api.get(`/polls/${id}/questionnaire.pdf`, { responseType: 'blob' });
+    return response.data;
+  },
+
   async getAssignedPrivatePolls(params?: PaginationParams): Promise<Poll[] | PaginatedResult<Poll>> {
     const response = await api.get('/polls/assigned/private', { params });
     return params?.page !== undefined || params?.limit !== undefined ? toPaginatedResult<Poll>(response) : response.data.data;

@@ -96,7 +96,7 @@ const AuthenticatedNavigator = () => (
 
 const PublicNavigator = () => (
   <PublicStack.Navigator>
-    <PublicStack.Screen name="Home" component={HomeScreen} options={{ title: 'Poll Master' }} />
+    <PublicStack.Screen name="Home" component={HomeScreen} options={{ title: 'Pollsmaster' }} />
     <PublicStack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
     <PublicStack.Screen name="PublicPolls" component={PublicPollsScreen} options={{ title: 'Public polls' }} />
     <PublicStack.Screen name="PublicVote" component={PublicVoteScreen} options={{ title: 'Vote' }} />

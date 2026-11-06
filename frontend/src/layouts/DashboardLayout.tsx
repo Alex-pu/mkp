@@ -15,9 +15,9 @@ const DashboardLayout: React.FC = () => {
 				<header className="border-b border-slate-200 bg-white px-6 py-5 shadow-sm">
 					<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
 						<div className="flex items-center gap-4">
-							<img src={logo} alt="PollMaster logo" className="h-12 w-12 object-contain" />
+							<img src={logo} alt="Pollsmaster logo" className="h-12 w-12 object-contain" />
 							<div>
-							<h1 className="text-2xl font-bold text-slate-900">PollMaster</h1>
+							<h1 className="text-2xl font-bold text-slate-900">Pollsmaster</h1>
 							</div>
 						</div>
 						<div className="text-sm text-slate-600">
