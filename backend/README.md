@@ -50,6 +50,8 @@ FRONTEND_URL=https://pollsmaster.online
 
 Use the origin only: do not include a trailing slash or a page path. Restart or redeploy the backend after changing the variable. The production origin is also included in the backend CORS allowlist.
 
+Both `https://pollsmaster.online` and `https://www.pollsmaster.online` are allowed by the API. To make the `www` address always show the canonical non-`www` URL, configure an HTTPS redirect from `www.pollsmaster.online` to `https://pollsmaster.online/` with the website's hosting provider. CORS settings do not perform website redirects.
+
 ## API Endpoints
 
 - POST /api/auth/login

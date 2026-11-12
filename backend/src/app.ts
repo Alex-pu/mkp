@@ -14,6 +14,7 @@ app.use(cors({
     const allowedOrigins = [
       process.env.FRONTEND_URL || 'http://localhost:3003',
       'https://pollsmaster.online',
+      'https://www.pollsmaster.online',
       'http://localhost:3000',
       'http://localhost:5002',
       'http://10.0.2.2:8081', // Android emulator to host
