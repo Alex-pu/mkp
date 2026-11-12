@@ -40,6 +40,16 @@ Backend API for Pollsmaster.
    npm run dev
    ```
 
+## Production CORS
+
+Set the backend server's `FRONTEND_URL` environment variable to the frontend origin:
+
+```env
+FRONTEND_URL=https://pollsmaster.online
+```
+
+Use the origin only: do not include a trailing slash or a page path. Restart or redeploy the backend after changing the variable. The production origin is also included in the backend CORS allowlist.
+
 ## API Endpoints
 
 - POST /api/auth/login
